@@ -108,7 +108,10 @@ namespace BatchDownloader {
 
             client.DownloadFileCompleted += (sender, e) => {
                 row.Cells["Percent"].Value = "100%";
-                watch.Stop();
+
+				if (watch != null) {
+					watch.Stop();
+				}
             };
 
             client.DownloadFileAsync(new Uri(row.Cells["URL"].Value.ToString()), save);
