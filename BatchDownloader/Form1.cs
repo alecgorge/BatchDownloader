@@ -125,7 +125,11 @@ namespace BatchDownloader {
         }
 
         private void openFolder_Click(object sender, EventArgs e) {
-            Process.Start("explorer.exe", @saveDir.Text);
+			if (saveDir.Text.Equals("") || !Directory.Exists(saveDir.Text)) {
+				MessageBox.Show("Can't save there! It doesn't exist!");
+				return;
+			}
+			ShowSelectedInExplorer.FileOrFolder(saveDir.Text);
         }
 
         private void about_Click(object sender, EventArgs e) {
@@ -143,13 +147,19 @@ namespace BatchDownloader {
         }
 
         private IEnumerable<string> replaceTokens(string raw, MatchCollection ms) {
+			IList<string> replacements = new List<string>();
+			IList<string> replaced = new List<string>();
+
+			if (ms.Count == 0) {
+				replaced.Add(raw);
+				return replaced;
+			}
+
             string range = ms[0].Groups[0].Captures[0].Value;
             range = range.Substring(2, range.Length - 4);
 
-            IList<string> replacements = new List<string>();
-            IList<string> replaced = new List<string>();
-            if (range.Contains(',')) {
-                string[] parts = range.Split(',');
+            if (range.Contains(',') || range.Contains('-')) {
+                string[] parts = Regex.Split(range, ",|-");
 
                 if (parts.Count() == 3 && IsNumeric(parts)) { // start,stop,inc
                     replacements = createRange(parts);
@@ -226,6 +236,10 @@ namespace BatchDownloader {
         }
 
         #endregion
+
+		private void progressGrid_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e) {
+			ShowSelectedInExplorer.FileOrFolder(progressGrid.Rows[e.RowIndex].Cells["SaveLoc"].Value.ToString());
+		}
     }
     public static class ISynchronizeInvokeExtensions {
         public static void InvokeEx<T>(this T @this, Action<T> action) where T : ISynchronizeInvoke {
